@@ -20,28 +20,30 @@ library(reshape2)
 library(readr)
 library(tree)
 library(randomForest)
+
+
 # Create theme for plots
-hw <- theme_gray()+ theme(
-  plot.title=element_text(hjust=0.5),
-  plot.subtitle=element_text(hjust=0.5),
-  plot.caption=element_text(hjust=-.5),
-  
-  strip.text.y = element_blank(),
-  strip.background=element_rect(fill=rgb(.9,.95,1),
-                                colour=gray(.5), linewidth =.2),
-  
-  panel.border=element_rect(fill=FALSE,colour=gray(.70)),
-  panel.grid.minor.y = element_blank(),
-  panel.grid.minor.x = element_blank(),
-  panel.spacing.x = unit(0.10,"cm"),
-  panel.spacing.y = unit(0.05,"cm"),
-  
-  # axis.ticks.y= element_blank()
-  axis.ticks=element_blank(),
-  axis.text=element_text(colour="black"),
-  axis.text.y=element_text(margin=margin(0,3,0,3)),
-  axis.text.x=element_text(margin=margin(-1,0,3,0))
-)
+hw <- theme_gray() +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5),
+    plot.caption = element_text(hjust = 0),
+    
+    strip.text.y = element_blank(),
+    strip.background = element_rect(fill = rgb(0.9, 0.95, 1), colour = gray(0.5), size = 0.2),
+    
+    panel.border = element_rect(fill = FALSE, colour = gray(0.70)),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.spacing.x = unit(0.10, "cm"),
+    panel.spacing.y = unit(0.05, "cm"),
+    
+    axis.ticks = element_blank(),
+    axis.text = element_text(colour = "black"),
+    axis.text.y = element_text(margin = margin(0, 3, 0, 3)),
+    axis.text.x = element_text(margin = margin(-1, 0, 3, 0))
+  )
+
 # Pull data from Github Respository
 url <- "https://raw.githubusercontent.com/KyleWandel/STAT-515-Final-Project/main/breast-cancer-wisconsin.csv"
 df <- read.table(url, header = TRUE, sep = ",")
@@ -60,64 +62,24 @@ str(df_clean)
 df_clean$benormal <- ifelse(df_clean$benormal == 4, 1, ifelse(df_clean$benormal == 2, 0, df_clean$benormal))
 
 # Evaluating the predictor variables
-# Histrograms
-create_histograms <- function(dataframe) {
-  # Initialize an empty list to store plots
-  plots_list <- list()
-  
-  # Loop through each column
-  for (col in names(dataframe)) {
-    # Skip columns that are not numeric
-    if (!is.numeric(dataframe[[col]])) {
-      next
-    }
-    
-    # Create histogram for the column
-    hist_plot <- ggplot(data = dataframe, aes(x = .data[[col]])) +
-      geom_histogram(fill = "skyblue", color = "black", bins = 10) +
-      labs(title = paste("Histogram of", col), x = col, y = "Frequency") +
-      hw
-    
-    # Store the plot in the list
-    plots_list[[col]] <- hist_plot
-  }
-  
-  return(plots_list)
-}
-
-# Create side-by-side histograms
-histograms <- create_histograms(df_clean)
-
-# Print histograms
-for (i in seq_along(histograms)) {
-  print(histograms[[i]])
-}
-
-# Correlations
-# VIF number comparison testing for mutlicollinearity
-# Chisq test on predictor variables 
-corr.test(df_clean)
-# There are some variables that show a high correlation to each other, but not of them were significant
+summary(df_clean)
+# Pairs Panel to show correlations, histograms and scatter plots
 pairs.panels(df_clean)
+# There are some variables that show a high correlation to each other, but not of them were significant
+# Some of the variables show a skewness to the left.
+# So we should log the predictor variables to make them more normally distrubted.
+variables_to_log <- c("mitoses", "normalnucleoli", "blandchromatin", "epithelial", "margadhesion", "uniformcellshape", "uniformcellsize","clumpthickness")
+df_log <- df_clean
+df_log[variables_to_log] <- lapply(df_log[variables_to_log], log)
 
 
-# Scatters of relationship to response variable use the logistic regression notes
-# loop through 
-
-
+# First model, logistic regression with no variable changing
 # For our dataset we want to predict if benormal = 1, therefore we will initially be using a logisitc regression model
 model_1 <- glm(benormal ~ ., data = df_clean, family = binomial)
 # Summary of our initial Model
 summary(model_1)
 model_1
-# Explain the model (Hypothesis test 1?)
-# VIF number comparison testing for mutlicollinearity
-# Can we make this better through variable transformation and selection?
-# A few of the predictor variables are exhibiting a right skew. We will tranform these variables using the log() function.
-variables_to_log <- c("mitoses", "normalnucleoli", "blandchromatin", "epithelial", "margadhesion", "uniformcellshape", "uniformcellsize","clumpthickness")
-df_log <- df_clean
-df_log[variables_to_log] <- lapply(df_log[variables_to_log], log)
-# Run the model Again
+# First model, logistic regression with logging the predictor variables
 model_2 <- glm(benormal ~ ., data = df_log, family = binomial)
 # Summary of our initial Model
 summary(model_2)
@@ -127,6 +89,14 @@ AIC(model_1, model_2)
 # Hypothesis test 2
 anova(model_1, model_2, test = "Chisq")
 # No significance difference between the models in fact, non-log was better.
+# Now lets make the model final by removing some of the insignificant varaibles. The less variables needed to explain the data/results the better. 
+model_3 <- glm(benormal ~ clumpthickness + margadhesion + barenuclei + blandchromatin, data = df_clean, family = binomial)
+summary(model_3)
+model_3
+anova(model_1, model_3, test = "Chisq")
+# P-value is <.05 so we can conclude the more complex model is significantly better than the simpler model.
+# For logisitic regression modeling the best model is:
+coef(model_1)
 
 # We have tried to log some of the columns, lets now try a new modeling approach
 
