@@ -1,26 +1,211 @@
 ---
-title: "Final Writing"
-format: html
+title: "Final Report"
+execute:
+  echo: false
+format:
+  html: 
+    theme: cosmo
 editor: visual
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
 ```{r}
-1 + 1
+# Install Packages if needed # 
+packages <- c( "randomForest","tree","dplyr", "tidyverse", "plotly", "psych", "ISLR", "leaps", "reshape2","readr")
+# Check if packages are not installed, then install
+for (package in packages) {
+  if (!(package %in% installed.packages())) {
+    install.packages(package, dependencies = TRUE)
+  }
+}
+# Load libraries
+library(dplyr)
+library(tidyverse)
+library(plotly)
+library(psych)
+library(ISLR)
+library(leaps)
+library(reshape2)
+library(readr)
+library(tree)
+library(randomForest)
+library(caret)
 ```
 
-You can add options to executable code like this
+## Abstract
+
+For the final project for our STAT 515 class, we were asked to find a dataset and perform a robust advanced analysis on the data. For this project we chose to use breast cancer screening data from the University of Wisconsin \[1\]. This study aims to identify patterns and indicators that could potentially predict the signs of malignant cancerous cells. Through meticulous analysis, the paper investigates various aspects, including a deep dive into the predictor variables and their relationship to each other and the response variable, the creation of various statistical models to predict cancerous cells and then finally a comparison of models to choose the best one. By scrutinizing these factors, this research hopes to make discovering breast cancer in patients easier and earlier.  
+
+## i. Introduction
+
+Why are we doing this, what do we hope to do/lean and why is that important. Description of dataset.
+
+## ii. Materials and Methods
+
+The University of Wisconsin breast cancer data from William Wolberg has 699 observations and 10 variables, the first variable represents the ID of the sample and the last column "benornal" represents the classification/response variable (for benign, 4 for malignant).
 
 ```{r}
-#| echo: false
-2 * 2
+url <- "https://raw.githubusercontent.com/KyleWandel/STAT-515-Final-Project/main/breast-cancer-wisconsin.csv"
+df <- read.table(url, header = TRUE, sep = ",")
+str(df)
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+To make the dataset ready for analysis we removed the ID column, checked and removed all rows with missing data changed he response variable values to malignant (4) = 1 and benign (2) = 0.
+
+```{r}
+# remove ID column 
+df <- subset(df, select = -id) 
+# Change column type
+df$barenuclei <- as.integer(df$barenuclei) 
+# Look for missing values
+colSums(is.na(df)) 
+# omit missing values
+df_clean <- na.omit(df) 
+str(df_clean) 
+# Change response variable to 1 and 0
+df_clean$benormal <- ifelse(df_clean$benormal == 4, 1, ifelse(df_clean$benormal == 2, 0, df_clean$benormal)) 
+summary(df_clean) 
+table(df_clean$benormal)
+```
+
+After cleaning the dataset, we looked at a summary of the statistics for each variable. For our sample there are 444 records that are identified as not being malignant (=0) and 239 records that are identified as being malignant (=1).
+
+We next wanted to identify if there were any patterns amongst the predictor variables in the dataset. First we looked at the correlations, histrograms and scatterplots of the variables using the pairs.panel() function.
+
+```{r}
+pairs.panels(df_clean)
+```
+
+Some of the variables showed correlations to each other, but none were deemed significant by the corr.test() function. But one thing we did notice was that many of the variables exhibited a right skew with their means larger than their medians. We could potentially log() the variables to make them more uniform.
+
+### Logistic Regression Model
+
+We decided to develop a Logisitic regression model to see if we could develop a model that could be used to predict if a cell was cancerous or not. Because our outcome can only be one of two things (cell is malignant or benign) we should be using a classification model and logistic regression is a simple model which is much easier to set up and train initially than other machine learning models.
+
+For the first model we used the cleaned dataset and all of the variables.
+
+```{r}
+model_1 <- glm(benormal ~ ., data = df_clean, family = binomial) 
+summary(model_1) 
+model_1 
+```
+
+In this model the variables clumpthickness, margadhesion, barenuclei, blandchromatin were considered the only variables had a significant impact on the response variables with p-values less than .05. The overall model had an AIC of 122.89.
+
+Next, we wanted to create a new model after logging our variables.
+
+```{r}
+variables_to_log <- c("mitoses", "normalnucleoli", "blandchromatin", "epithelial", "margadhesion", "uniformcellshape", "uniformcellsize","clumpthickness") 
+df_log <- df_clean 
+df_log[variables_to_log] <- lapply(df_log[variables_to_log], log) 
+model_2 <- glm(benormal ~ ., data = df_log, family = binomial) 
+summary(model_2) 
+model_2 
+```
+
+For this model the variables clumpthickness and barenuclei were considered the only variables had a significant impact on the response variables with p-values less than .05. The overall model had an AIC of 127.02.
+
+Based on the AIC of these two models, the non-logged model performed better. Now lets try and simplify the model.
+
+```{r}
+model_3 <- glm(benormal ~ clumpthickness + margadhesion + barenuclei + blandchromatin, data = df_clean, family = binomial) 
+summary(model_3) 
+model_3 
+anova(model_1, model_3, test = "Chisq") 
+```
+
+As should be expected, creating a model using only the significant variables was worse at explaining the dataset. Using the Chisq test, we can also conclude that the more complex model is significantly better than the simpler model.
+
+Using model_1 as the final model, lets see how accurcate it is for prediction.
+
+```{r}
+glm.probs=predict(model_1,type="response")
+glm.probs[1:10]
+
+glm.pred=rep(0,nrow(df_clean))
+glm.pred[glm.probs>.5]=1
+
+glm.pred=as.factor(glm.pred)
+df_clean$benormal=as.factor(df_clean$benormal)
+confusionMatrix(glm.pred,df_clean$benormal)
+```
+
+Looking at the confusion matrix this is a very good model with high predictability for both false positives and negatives. The % chance the model falsely predicted cancer when not was 10/444 (2.2%) and the chance the model falsely predicted not having cancer when there was 11/239 (4.6%).
+
+### Decision Tree and Random Forest Modeling
+
+Another modeling type we used for trying to predict whether a cell was cancerous or not was a random forest model. One of the biggest advantages of random forests is its versatility. It can be used for both regression and classification tasks, and it's also easy to view the relative importance it assigns to the input features. One of the biggest problems in machine learning is overfitting, but most of the time this won't happen thanks to the random forest classifier. If there are enough trees in the forest, the classifier won't overfit the model.
+
+First, we looked at a decision tree model to determine the best spilt for node splitting. We did this by splitting the data into two sets, training and testing to train the model and then test its accuracy.
+
+```{r}
+set.seed(1) 
+train = sample(1:nrow(df_clean), nrow(df_clean)/2) 
+tree.df_clean=tree(benormal~.,df_clean,subset=train) 
+cv.df_clean=cv.tree(tree.df_clean) 
+plot(cv.df_clean$size,cv.df_clean$dev,type='b')
+```
+
+Based on these results, it is best to include 3 variables in each split. Knowing this, we created a random forest model at the desired variable spilt.
+
+```{r}
+cancer_rf=randomForest(benormal~.,data=df_clean,subset=train,mtry=3,importance=TRUE) 
+yhat.rf = predict(cancer_rf,newdata=df_clean[-train,]) 
+df_clean.test=df_clean[-train,"benormal"] 
+mean((yhat.rf-df_clean.test)^2) #test set MSE 
+cancer_rf 
+plot(cancer_rf) 
+varImpPlot(cancer_rf) 
+```
+
+The variable that is most important to reduce the mean standard error (MSE) is barenuceli and the variables that were deemed the most important to include in the node splitting were uniformcellsize and uniformcellshape. Overall, the model is very good with 88.7% of the variables explained.
+
+```{r}
+glm.probs=predict(cancer_rf,type="response")
+glm.probs[1:10]
+
+glm.pred=rep(0,nrow(df_clean))
+glm.pred[glm.probs>.5]=1
+
+glm.pred=as.factor(glm.pred)
+df_clean$benormal=as.factor(df_clean$benormal)
+confusionMatrix(glm.pred,df_clean$benormal)
+```
+
+However, when looking at the confusion matrix we see a different story. The % chance the model falsely predicted cancer when not was 167/444 (37.6%) and the chance the model falsely predicted not having cancer when there was 136/239 (56.9%).
+
+### Principal Component Analysis
+We mentioned earlier that some of our variables were correlated but none were significantly correlated to each other. Also, in some of our other models, some of the variables were not significantly correlated to predicting the response variable. To examine this further, we did a principal component analysis on the predictor variables too see if reducing the number of variables of a data set naturally comes at the expense of accuracy while not losing too much accuracy.
+```{r}
+df_clean$benormal <- as.integer(df_clean$benormal)
+states=row.names(df_clean)
+apply(df_clean, 2, mean)
+apply(df_clean, 2, var)
+# There isn't much difference in the mean and variance, so we do not need to scale/standardize the variables.
+# Calculate the principal components
+pr.out=prcomp(df_clean, scale=TRUE)
+names(pr.out)
+pr.out$center
+head(pr.out$x,n = 10)
+
+pr.out$rotation=-pr.out$rotation
+pr.out$x=-pr.out$x
+biplot(pr.out, scale=0)
+
+(pr.var=pr.out$sdev^2) #variance of each PC
+pve=pr.var/sum(pr.var)
+pve
+
+# Scree plot
+par(mfrow =c(1,2))
+plot(pve, xlab="Principal Component", 
+     ylab="Proportion of Variance Explained", ylim=c(0,1),type='b')
+
+plot(cumsum(pve), xlab="Principal Component",
+     ylab="Cumulative Proportion of Variance Explained", 
+     ylim=c(0,1),type='b')
+
+```
+The eigenvalues taper off after the first few components, with the first two capturing the majority of the variance.
+
+In the second plot we can see that the first 6 components explain over 80% of the variance in the data and the remaining components add little additional information.
+

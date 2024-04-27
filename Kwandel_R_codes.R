@@ -62,7 +62,9 @@ str(df_clean)
 df_clean$benormal <- ifelse(df_clean$benormal == 4, 1, ifelse(df_clean$benormal == 2, 0, df_clean$benormal))
 
 # Evaluating the predictor variables
+
 summary(df_clean)
+table(df_clean$benormal)
 # Pairs Panel to show correlations, histograms and scatter plots
 pairs.panels(df_clean)
 # There are some variables that show a high correlation to each other, but not of them were significant
@@ -113,7 +115,7 @@ text(tree.df_clean,pretty=0)
 # Checking if Pruning will improve the model
 cv.df_clean=cv.tree(tree.df_clean)
 plot(cv.df_clean$size,cv.df_clean$dev,type='b')
-# Tree is maxed at 4, 3 is vert close to 4 
+# Tree is maxed at 4, 3 is very close to 4 
 prune.df_clean=prune.tree(tree.df_clean,best=3)
 plot(prune.df_clean)
 text(prune.df_clean,pretty=0)
@@ -124,27 +126,30 @@ df_clean.test=df_clean[-train,"benormal"]#testing y values
 mean((yhat-df_clean.test)^2) #MSE testing
 
 # Creating a random forest model
-set.seed(2)
-rf.df_clean=randomForest(benormal~.,data=df_clean,subset=train,mtry=6,importance=TRUE)
-yhat.rf = predict(rf.df_clean,newdata=df_clean[-train,])
+set.seed(1)
+train = sample(1:nrow(df_clean), nrow(df_clean)/2)
+cancer_rf=randomForest(benormal~.,data=df_clean,subset=train,mtry=3,importance=TRUE)
+yhat.rf = predict(cancer_rf,newdata=df_clean[-train,])
+df_clean.test=df_clean[-train,"benormal"]
 mean((yhat.rf-df_clean.test)^2) #test set MSE
 # plotting the forest
-plot(rf.df_clean)
+plot(cancer_rf)
 # What are the most important factors?
-varImpPlot(rf.df_clean)
+varImpPlot(cancer_rf)
+cancer_rf
+
 
 # Do a PCA on the models reduced dataset for question 3
+df_clean$benormal <- as.integer(df_clean$benormal)
 states=row.names(df_clean)
 apply(df_clean, 2, mean)
 apply(df_clean, 2, var)
 # There isn't much difference in the mean and variance, so we do not need to scale/standardize the variables.
-
 # Calculate the principal components
 pr.out=prcomp(df_clean, scale=TRUE)
 names(pr.out)
 pr.out$center
 head(pr.out$x,n = 10)
-pairs.panels(pr.out$x)
 
 pr.out$rotation=-pr.out$rotation
 pr.out$x=-pr.out$x
