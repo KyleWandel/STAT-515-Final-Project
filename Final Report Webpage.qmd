@@ -37,9 +37,29 @@ For the final project for our STAT 515 class, we were asked to find a dataset an
 
 ## i. Introduction
 
-Why are we doing this, what do we hope to do/lean and why is that important. Description of dataset.
+Breast cancer is one of the most common cancers in the world. While the pharmaceutical industry has invested quite a bit in trying to find a definitive cure to this cancer, it still raises the need for more analysis to be done on breast cancer data so that a cancerous tumor can be caught in the early stages. We wanted to see if it was possible to identify the potential emergence of breast cancer in women based on different features of the tumor cells. This dataset seemed like a good fit since it has 9 predictor variables, and the outcome variable would indicate whether the tumor can be classified as malignant (cancerous) or benign (non-cancerous). 
 
-## ii. Materials and Methods
+The dataset we choose to perform this research is from Dr. William Wolberg and his clinical studies from 1989 to 1991. This dataset is very well known and highly integrable due to the amount of research conducted using this data. Below is a list and description of the 9 predictor variables and the 1 response variable (benormal).  
+
+-   **clumpthickness**: (1-10). Benign cells tend to be grouped in monolayers, while cancerous cells are often grouped in multilayers. 
+
+-   **uniformcellsize** (1-10). Cancer cells tend to vary in size and shape. 
+
+-   **uniformcellshape** (1-10). Cancer cells tend to vary in shape and size. 
+
+-   **margadhesion**: (1-10). Normal cells tend to stick together, while cancer cells tend to lose this ability, so the loss of adhesion is a sign of malignancy. 
+
+-   **epithelial**: (1-10). It is related to the uniformity mentioned above. Epithelial cells that are significantly enlarged may be malignant. 
+
+-   **barenuclei**: (1-10). This term is used for nuclei not surrounded by cytoplasm (the rest of the cell). Those are typically seen in benign tumors. 
+
+-   **blandchromatin**: (1-10). Describes a uniform \"texture\" of the nucleus seen in benign cells. In cancer cells, the chromatin tends to be more coarse and to form clumps. 
+
+-   **normalnucleoli**: (1-10). Nucleoli are small structures seen in the nucleus. In normal cells, the nucleolus is usually very small, if visible. The nucleoli become more prominent in cancer cells, and sometimes there are multiple. 
+
+-   **mitoses**: (1-10). Cancer is essentially a disease of uncontrolled mitosis. 
+
+-   **benormal**: (2 or 4). Benign (non-cancerous) or malignant (cancerous) lump in a breast. ii. Materials and Methods
 
 The University of Wisconsin breast cancer data from William Wolberg has 699 observations and 10 variables, the first variable represents the ID of the sample and the last column "benornal" represents the classification/response variable (for benign, 4 for malignant).
 
@@ -174,7 +194,9 @@ confusionMatrix(glm.pred,df_clean$benormal)
 However, when looking at the confusion matrix we see a different story. The % chance the model falsely predicted cancer when not was 167/444 (37.6%) and the chance the model falsely predicted not having cancer when there was 136/239 (56.9%).
 
 ### Principal Component Analysis
+
 We mentioned earlier that some of our variables were correlated but none were significantly correlated to each other. Also, in some of our other models, some of the variables were not significantly correlated to predicting the response variable. To examine this further, we did a principal component analysis on the predictor variables too see if reducing the number of variables of a data set naturally comes at the expense of accuracy while not losing too much accuracy.
+
 ```{r}
 df_clean$benormal <- as.integer(df_clean$benormal)
 states=row.names(df_clean)
@@ -205,7 +227,7 @@ plot(cumsum(pve), xlab="Principal Component",
      ylim=c(0,1),type='b')
 
 ```
+
 The eigenvalues taper off after the first few components, with the first two capturing the majority of the variance.
 
 In the second plot we can see that the first 6 components explain over 80% of the variance in the data and the remaining components add little additional information.
-

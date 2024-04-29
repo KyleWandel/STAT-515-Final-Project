@@ -144,7 +144,18 @@ The following object is masked from 'package:ggplot2':
 
 The following object is masked from 'package:dplyr':
 
-    combine</code></pre>
+    combine
+
+
+Loading required package: lattice
+
+
+Attaching package: 'caret'
+
+
+The following object is masked from 'package:purrr':
+
+    lift</code></pre>
 </div>
 </div>
 <section id="abstract" class="level2">
@@ -153,10 +164,20 @@ The following object is masked from 'package:dplyr':
 </section>
 <section id="i.-introduction" class="level2">
 <h2 class="anchored" data-anchor-id="i.-introduction">i. Introduction</h2>
-<p>Why are we doing this, what do we hope to do/lean and why is that important. Description of dataset.</p>
-</section>
-<section id="ii.-materials-and-methods" class="level2">
-<h2 class="anchored" data-anchor-id="ii.-materials-and-methods">ii. Materials and Methods</h2>
+<p>Breast cancer is one of the most common cancers in the world. While the pharmaceutical industry has invested quite a bit in trying to find a definitive cure to this cancer, it still raises the need for more analysis to be done on breast cancer data so that a cancerous tumor can be caught in the early stages. We wanted to see if it was possible to identify the potential emergence of breast cancer in women based on different features of the tumor cells. This dataset seemed like a good fit since it has 9 predictor variables, and the outcome variable would indicate whether the tumor can be classified as malignant (cancerous) or benign (non-cancerous).&nbsp;</p>
+<p>The dataset we choose to perform this research is from Dr.&nbsp;William Wolberg and his clinical studies from 1989 to 1991. This dataset is very well known and highly integrable due to the amount of research conducted using this data. Below is a list and description of the 9 predictor variables and the 1 response variable (benormal).&nbsp;&nbsp;</p>
+<ul>
+<li><p><strong>clumpthickness</strong>: (1-10). Benign cells tend to be grouped in monolayers, while cancerous cells are often grouped in multilayers.&nbsp;</p></li>
+<li><p><strong>uniformcellsize</strong> (1-10). Cancer cells tend to vary in size and shape.&nbsp;</p></li>
+<li><p><strong>uniformcellshape</strong> (1-10). Cancer cells tend to vary in shape and size.&nbsp;</p></li>
+<li><p><strong>margadhesion</strong>: (1-10). Normal cells tend to stick together, while cancer cells tend to lose this ability, so the loss of adhesion is a sign of malignancy.&nbsp;</p></li>
+<li><p><strong>epithelial</strong>: (1-10). It is related to the uniformity mentioned above. Epithelial cells that are significantly enlarged may be malignant.&nbsp;</p></li>
+<li><p><strong>barenuclei</strong>: (1-10). This term is used for nuclei not surrounded by cytoplasm (the rest of the cell). Those are typically seen in benign tumors.&nbsp;</p></li>
+<li><p><strong>blandchromatin</strong>: (1-10). Describes a uniform "texture" of the nucleus seen in benign cells. In cancer cells, the chromatin tends to be more coarse and to form clumps.&nbsp;</p></li>
+<li><p><strong>normalnucleoli</strong>: (1-10). Nucleoli are small structures seen in the nucleus. In normal cells, the nucleolus is usually very small, if visible. The nucleoli become more prominent in cancer cells, and sometimes there are multiple.&nbsp;</p></li>
+<li><p><strong>mitoses</strong>: (1-10). Cancer is essentially a disease of uncontrolled mitosis.&nbsp;</p></li>
+<li><p><strong>benormal</strong>: (2 or 4). Benign (non-cancerous) or malignant (cancerous) lump in a breast.&nbsp;ii. Materials and Methods</p></li>
+</ul>
 <p>The University of Wisconsin breast cancer data from William Wolberg has 699 observations and 10 variables, the first variable represents the ID of the sample and the last column “benornal” represents the classification/response variable (for benign, 4 for malignant).</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
@@ -245,7 +266,7 @@ The following object is masked from 'package:dplyr':
 <p>Some of the variables showed correlations to each other, but none were deemed significant by the corr.test() function. But one thing we did notice was that many of the variables exhibited a right skew with their means larger than their medians. We could potentially log() the variables to make them more uniform.</p>
 <section id="logistic-regression-model" class="level3">
 <h3 class="anchored" data-anchor-id="logistic-regression-model">Logistic Regression Model</h3>
-<p>After cleaning the data, we decided to develop a Logisitic regression model to see if we could develop a model that could be used to predict if a cell was cancerous or not. Because our outcome can only be one of two things (cell is malignant or benign) we should be using a classification model and logistic regression is a simple model which is much easier to set up and train initially than other machine learning models.</p>
+<p>We decided to develop a Logisitic regression model to see if we could develop a model that could be used to predict if a cell was cancerous or not. Because our outcome can only be one of two things (cell is malignant or benign) we should be using a classification model and logistic regression is a simple model which is much easier to set up and train initially than other machine learning models.</p>
 <p>For the first model we used the cleaned dataset and all of the variables.</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
@@ -293,7 +314,7 @@ Null Deviance:      884.4
 Residual Deviance: 102.9    AIC: 122.9</code></pre>
 </div>
 </div>
-<p>In this model the variables clumpthickness, margadhesion, barenuclei, blandchromatin were considered the only variables had significant on the response variables with p-values less than .05. The overall model had an AIC of 122.89.</p>
+<p>In this model the variables clumpthickness, margadhesion, barenuclei, blandchromatin were considered the only variables had a significant impact on the response variables with p-values less than .05. The overall model had an AIC of 122.89.</p>
 <p>Next, we wanted to create a new model after logging our variables.</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
@@ -341,7 +362,7 @@ Null Deviance:      884.4
 Residual Deviance: 107  AIC: 127</code></pre>
 </div>
 </div>
-<p>For this model the variables clumpthickness and barenuclei were considered the only variables had significant on the response variables with p-values less than .05. The overall model had an AIC of 127.02.</p>
+<p>For this model the variables clumpthickness and barenuclei were considered the only variables had a significant impact on the response variables with p-values less than .05. The overall model had an AIC of 127.02.</p>
 <p>Based on the AIC of these two models, the non-logged model performed better. Now lets try and simplify the model.</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
@@ -395,7 +416,223 @@ Model 2: benormal ~ clumpthickness + margadhesion + barenuclei + blandchromatin
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </div>
 </div>
-<p>As should be expected, creating a model using only the significant variables was worse at explaining the dataset. We can also conclude that the more complex model is significantly better than the simpler model.</p>
+<p>As should be expected, creating a model using only the significant variables was worse at explaining the dataset. Using the Chisq test, we can also conclude that the more complex model is significantly better than the simpler model.</p>
+<p>Using model_1 as the final model, lets see how accurcate it is for prediction.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>          1           2           3           4           5           6 
+0.016046581 0.908808622 0.008137623 0.760934919 0.018166848 0.999973622 
+          7           8           9          10 
+0.056844170 0.004503358 0.011249056 0.006032371 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Confusion Matrix and Statistics
+
+          Reference
+Prediction   0   1
+         0 434  11
+         1  10 228
+                                          
+               Accuracy : 0.9693          
+                 95% CI : (0.9534, 0.9809)
+    No Information Rate : 0.6501          
+    P-Value [Acc &gt; NIR] : &lt;2e-16          
+                                          
+                  Kappa : 0.9324          
+                                          
+ Mcnemar's Test P-Value : 1               
+                                          
+            Sensitivity : 0.9775          
+            Specificity : 0.9540          
+         Pos Pred Value : 0.9753          
+         Neg Pred Value : 0.9580          
+             Prevalence : 0.6501          
+         Detection Rate : 0.6354          
+   Detection Prevalence : 0.6515          
+      Balanced Accuracy : 0.9657          
+                                          
+       'Positive' Class : 0               
+                                          </code></pre>
+</div>
+</div>
+<p>Looking at the confusion matrix this is a very good model with high predictability for both false positives and negatives. The % chance the model falsely predicted cancer when not was 10/444 (2.2%) and the chance the model falsely predicted not having cancer when there was 11/239 (4.6%).</p>
+</section>
+<section id="decision-tree-and-random-forest-modeling" class="level3">
+<h3 class="anchored" data-anchor-id="decision-tree-and-random-forest-modeling">Decision Tree and Random Forest Modeling</h3>
+<p>Another modeling type we used for trying to predict whether a cell was cancerous or not was a random forest model. One of the biggest advantages of random forests is its versatility. It can be used for both regression and classification tasks, and it’s also easy to view the relative importance it assigns to the input features. One of the biggest problems in machine learning is overfitting, but most of the time this won’t happen thanks to the random forest classifier. If there are enough trees in the forest, the classifier won’t overfit the model.</p>
+<p>First, we looked at a decision tree model to determine the best spilt for node splitting. We did this by splitting the data into two sets, training and testing to train the model and then test its accuracy.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Final-Report-Webpage_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Based on these results, it is best to include 3 variables in each split. Knowing this, we created a random forest model at the desired variable spilt.</p>
+<div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in Ops.factor(yhat.rf, df_clean.test): '-' not meaningful for factors</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] NA</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+ randomForest(formula = benormal ~ ., data = df_clean, mtry = 3,      importance = TRUE, subset = train) 
+               Type of random forest: classification
+                     Number of trees: 500
+No. of variables tried at each split: 3
+
+        OOB estimate of  error rate: 3.23%
+Confusion matrix:
+    0   1 class.error
+0 202   6  0.02884615
+1   5 128  0.03759398</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Final-Report-Webpage_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Final-Report-Webpage_files/figure-html/unnamed-chunk-10-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The variable that is most important to reduce the mean standard error (MSE) is barenuceli and the variables that were deemed the most important to include in the node splitting were uniformcellsize and uniformcellshape. Overall, the model is very good with 88.7% of the variables explained.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>695 131 524 486 311 279 193 320 612 286 
+  0   0   1   0   0   0   0   1   1   1 
+Levels: 0 1</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in Ops.factor(glm.probs, 0.5): '&gt;' not meaningful for factors</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in confusionMatrix.default(glm.pred, df_clean$benormal): Levels are not
+in the same order for reference and data. Refactoring data to match.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Confusion Matrix and Statistics
+
+          Reference
+Prediction   0   1
+         0 444 239
+         1   0   0
+                                         
+               Accuracy : 0.6501         
+                 95% CI : (0.613, 0.6859)
+    No Information Rate : 0.6501         
+    P-Value [Acc &gt; NIR] : 0.5176         
+                                         
+                  Kappa : 0              
+                                         
+ Mcnemar's Test P-Value : &lt;2e-16         
+                                         
+            Sensitivity : 1.0000         
+            Specificity : 0.0000         
+         Pos Pred Value : 0.6501         
+         Neg Pred Value :    NaN         
+             Prevalence : 0.6501         
+         Detection Rate : 0.6501         
+   Detection Prevalence : 1.0000         
+      Balanced Accuracy : 0.5000         
+                                         
+       'Positive' Class : 0              
+                                         </code></pre>
+</div>
+</div>
+<p>However, when looking at the confusion matrix we see a different story. The % chance the model falsely predicted cancer when not was 167/444 (37.6%) and the chance the model falsely predicted not having cancer when there was 136/239 (56.9%).</p>
+</section>
+<section id="principal-component-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="principal-component-analysis">Principal Component Analysis</h3>
+<p>We mentioned earlier that some of our variables were correlated but none were significantly correlated to each other. Also, in some of our other models, some of the variables were not significantly correlated to predicting the response variable. To examine this further, we did a principal component analysis on the predictor variables too see if reducing the number of variables of a data set naturally comes at the expense of accuracy while not losing too much accuracy.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>  clumpthickness  uniformcellsize uniformcellshape     margadhesion 
+        4.442167         3.150805         3.215227         2.830161 
+      epithelial       barenuclei   blandchromatin   normalnucleoli 
+        3.234261         3.544656         3.445095         2.869693 
+         mitoses         benormal 
+        1.603221         1.349927 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  clumpthickness  uniformcellsize uniformcellshape     margadhesion 
+       7.9566944        9.3951130        8.9316153        8.2057165 
+      epithelial       barenuclei   blandchromatin   normalnucleoli 
+       4.9421089       13.2776950        6.0010133        9.3187722 
+         mitoses         benormal 
+       3.0021597        0.2278116 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "sdev"     "rotation" "center"   "scale"    "x"       </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  clumpthickness  uniformcellsize uniformcellshape     margadhesion 
+        4.442167         3.150805         3.215227         2.830161 
+      epithelial       barenuclei   blandchromatin   normalnucleoli 
+        3.234261         3.544656         3.445095         2.869693 
+         mitoses         benormal 
+        1.603221         1.349927 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         PC1         PC2         PC3         PC4         PC5         PC6
+1   1.632138 -0.10110899  0.53066017  0.04867467 -0.13967887  0.27266403
+2  -1.091952 -0.36764796 -0.37608283 -0.33727673  1.66159818 -0.49947533
+3   1.747215 -0.06835623 -0.05452903 -0.08442398 -0.05762203 -0.12479945
+4  -1.123580 -0.30561252  0.32020004  1.60389615 -0.54780477  0.16977170
+5   1.517047 -0.06200488 -0.04883144 -0.28957594 -0.09371811  0.57460157
+6  -5.173918 -1.36302344 -0.65367495  0.40382274  0.40838925  0.39318524
+7   1.250797 -0.53179083 -0.59909575 -1.16253763  0.26500705 -1.70934020
+8   1.817759  0.03688650 -0.35718994  0.11869407 -0.03111154 -0.03121061
+9   1.714243  2.28289475  0.16547803 -0.59033209 -0.12926420 -0.30699255
+10  1.749457  0.02462355  0.31567378  0.12332678  0.02349157  0.20775672
+           PC7         PC8         PC9        PC10
+1   0.32271338 -0.41613912  0.14987849 -0.01320316
+2  -0.76488363 -0.51190377  1.43717566 -0.18341430
+3   0.33212748 -0.22014329  0.14173141 -0.02990047
+4  -0.18141468  1.53841728  1.21084570 -0.32073360
+5   0.09877523 -0.42777805  0.09395639  0.02496084
+6   0.34574434  0.13590736  0.52396579 -0.01704468
+7   0.10416365  0.10310453  0.89835584 -0.27270693
+8   0.41671423  0.04563756  0.03920288  0.22753908
+9   0.16385020  0.27850361 -0.07680255 -0.01644927
+10  0.07179972 -0.02809058  0.05914645 -0.26772940</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Final-Report-Webpage_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] 6.73117831 0.79315381 0.54596815 0.46529869 0.38038147 0.31254327
+ [7] 0.29602826 0.26121943 0.12634121 0.08788742</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] 0.673117831 0.079315381 0.054596815 0.046529869 0.038038147 0.031254327
+ [7] 0.029602826 0.026121943 0.012634121 0.008788742</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Final-Report-Webpage_files/figure-html/unnamed-chunk-12-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The eigenvalues taper off after the first few components, with the first two capturing the majority of the variance.</p>
+<p>In the second plot we can see that the first 6 components explain over 80% of the variance in the data and the remaining components add little additional information.</p>
 </section>
 </section>
 
