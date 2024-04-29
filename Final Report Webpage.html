@@ -173,7 +173,7 @@ The following object is masked from 'package:purrr':
 <li><p><strong>margadhesion</strong>: (1-10). Normal cells tend to stick together, while cancer cells tend to lose this ability, so the loss of adhesion is a sign of malignancy.&nbsp;</p></li>
 <li><p><strong>epithelial</strong>: (1-10). It is related to the uniformity mentioned above. Epithelial cells that are significantly enlarged may be malignant.&nbsp;</p></li>
 <li><p><strong>barenuclei</strong>: (1-10). This term is used for nuclei not surrounded by cytoplasm (the rest of the cell). Those are typically seen in benign tumors.&nbsp;</p></li>
-<li><p><strong>blandchromatin</strong>: (1-10). Describes a uniform "texture" of the nucleus seen in benign cells. In cancer cells, the chromatin tends to be more coarse and to form clumps.&nbsp;</p></li>
+<li><p><strong>blandchromatin</strong>: (1-10). Describes a uniform “texture” of the nucleus seen in benign cells. In cancer cells, the chromatin tends to be more coarse and to form clumps.&nbsp;</p></li>
 <li><p><strong>normalnucleoli</strong>: (1-10). Nucleoli are small structures seen in the nucleus. In normal cells, the nucleolus is usually very small, if visible. The nucleoli become more prominent in cancer cells, and sometimes there are multiple.&nbsp;</p></li>
 <li><p><strong>mitoses</strong>: (1-10). Cancer is essentially a disease of uncontrolled mitosis.&nbsp;</p></li>
 <li><p><strong>benormal</strong>: (2 or 4). Benign (non-cancerous) or malignant (cancerous) lump in a breast.&nbsp;ii. Materials and Methods</p></li>
@@ -264,6 +264,9 @@ The following object is masked from 'package:purrr':
 </div>
 </div>
 <p>Some of the variables showed correlations to each other, but none were deemed significant by the corr.test() function. But one thing we did notice was that many of the variables exhibited a right skew with their means larger than their medians. We could potentially log() the variables to make them more uniform.</p>
+</section>
+<section id="ii.-materials-and-methods" class="level2">
+<h2 class="anchored" data-anchor-id="ii.-materials-and-methods">ii. Materials and Methods</h2>
 <section id="logistic-regression-model" class="level3">
 <h3 class="anchored" data-anchor-id="logistic-regression-model">Logistic Regression Model</h3>
 <p>We decided to develop a Logisitic regression model to see if we could develop a model that could be used to predict if a cell was cancerous or not. Because our outcome can only be one of two things (cell is malignant or benign) we should be using a classification model and logistic regression is a simple model which is much easier to set up and train initially than other machine learning models.</p>
@@ -417,7 +420,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </div>
 </div>
 <p>As should be expected, creating a model using only the significant variables was worse at explaining the dataset. Using the Chisq test, we can also conclude that the more complex model is significantly better than the simpler model.</p>
-<p>Using model_1 as the final model, lets see how accurcate it is for prediction.</p>
+<p>Using model_1 as the final model, lets see how accurate it is for prediction.</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>          1           2           3           4           5           6 
@@ -470,27 +473,25 @@ Prediction   0   1
 </div>
 </div>
 </div>
-<p>Based on these results, it is best to include 3 variables in each split. Knowing this, we created a random forest model at the desired variable spilt.</p>
+<p>Based on these results, it is best to include 6 variables in each split. Knowing this, we created a random forest model at the desired variable split.</p>
 <div class="cell">
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning in Ops.factor(yhat.rf, df_clean.test): '-' not meaningful for factors</code></pre>
+<pre><code>Warning in randomForest.default(m, y, ...): The response has five or fewer
+unique values.  Are you sure you want to do regression?</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] NA</code></pre>
+<pre><code>[1] 0.03088145</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
- randomForest(formula = benormal ~ ., data = df_clean, mtry = 3,      importance = TRUE, subset = train) 
-               Type of random forest: classification
+ randomForest(formula = benormal ~ ., data = df_clean, mtry = 6,      importance = TRUE, subset = train) 
+               Type of random forest: regression
                      Number of trees: 500
-No. of variables tried at each split: 3
+No. of variables tried at each split: 6
 
-        OOB estimate of  error rate: 3.23%
-Confusion matrix:
-    0   1 class.error
-0 202   6  0.02884615
-1   5 128  0.03759398</code></pre>
+          Mean of squared residuals: 0.0294727
+                    % Var explained: 86.76</code></pre>
 </div>
 <div class="cell-output-display">
 <div>
@@ -507,51 +508,45 @@ Confusion matrix:
 </div>
 </div>
 </div>
-<p>The variable that is most important to reduce the mean standard error (MSE) is barenuceli and the variables that were deemed the most important to include in the node splitting were uniformcellsize and uniformcellshape. Overall, the model is very good with 88.7% of the variables explained.</p>
+<p>The variable that is most important to reduce the mean standard error (MSE) is barenuceli and the variables that were deemed the most important to include in the node splitting were uniformcellsize and uniformcellshape. Overall, the model is very good with 88.7% of the variables explained. Looking at the confusion matrix:</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>695 131 524 486 311 279 193 320 612 286 
-  0   0   1   0   0   0   0   1   1   1 
-Levels: 0 1</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning in Ops.factor(glm.probs, 0.5): '&gt;' not meaningful for factors</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning in confusionMatrix.default(glm.pred, df_clean$benormal): Levels are not
-in the same order for reference and data. Refactoring data to match.</code></pre>
+<pre><code>            1             2             3             4             5 
+-6.311618e-16  7.780000e-01 -5.944134e-16  3.439000e-01  4.533333e-03 
+            6             7             8             9            10 
+ 1.000000e+00  2.551000e-01 -6.267209e-16  2.292000e-01 -5.822010e-16 </code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Confusion Matrix and Statistics
 
           Reference
 Prediction   0   1
-         0 444 239
-         1   0   0
+         0 438   9
+         1   6 230
                                          
-               Accuracy : 0.6501         
-                 95% CI : (0.613, 0.6859)
+               Accuracy : 0.978          
+                 95% CI : (0.964, 0.9877)
     No Information Rate : 0.6501         
-    P-Value [Acc &gt; NIR] : 0.5176         
+    P-Value [Acc &gt; NIR] : &lt;2e-16         
                                          
-                  Kappa : 0              
+                  Kappa : 0.9516         
                                          
- Mcnemar's Test P-Value : &lt;2e-16         
+ Mcnemar's Test P-Value : 0.6056         
                                          
-            Sensitivity : 1.0000         
-            Specificity : 0.0000         
-         Pos Pred Value : 0.6501         
-         Neg Pred Value :    NaN         
+            Sensitivity : 0.9865         
+            Specificity : 0.9623         
+         Pos Pred Value : 0.9799         
+         Neg Pred Value : 0.9746         
              Prevalence : 0.6501         
-         Detection Rate : 0.6501         
-   Detection Prevalence : 1.0000         
-      Balanced Accuracy : 0.5000         
+         Detection Rate : 0.6413         
+   Detection Prevalence : 0.6545         
+      Balanced Accuracy : 0.9744         
                                          
        'Positive' Class : 0              
                                          </code></pre>
 </div>
 </div>
-<p>However, when looking at the confusion matrix we see a different story. The % chance the model falsely predicted cancer when not was 167/444 (37.6%) and the chance the model falsely predicted not having cancer when there was 136/239 (56.9%).</p>
+<p>The percent chance the model falsely predicted cancer when not was 6/444 (1.4%) and the chance the model falsely predicted not having cancer when there was 9/239 (3.7%).</p>
 </section>
 <section id="principal-component-analysis" class="level3">
 <h3 class="anchored" data-anchor-id="principal-component-analysis">Principal Component Analysis</h3>
@@ -632,8 +627,22 @@ Prediction   0   1
 </div>
 </div>
 <p>The eigenvalues taper off after the first few components, with the first two capturing the majority of the variance.</p>
-<p>In the second plot we can see that the first 6 components explain over 80% of the variance in the data and the remaining components add little additional information.</p>
+<p>In the plot on the right we can see that the first 6 components explain over 90% of the variance in the data and the remaining components add little additional information.</p>
 </section>
+</section>
+<section id="iii.-limitations" class="level2">
+<h2 class="anchored" data-anchor-id="iii.-limitations">iii. Limitations</h2>
+<p>There were no major limitations for this analysis but there were a few of things that needed to be done to the dataset in order to clean and make the dataset usable for analysis. First, we had to identify and remove all missing rows from the dataset. Second, we had to transform the response variable to be "0" and "1". Finally, many of the variables seemed to show a left skew making us question if the variables should be transformed or not.&nbsp;</p>
+<p>There were only 699 samples for the dataset and although a solid number of samples, more samples would lead to a more predictable conclusion.&nbsp;</p>
+</section>
+<section id="iv.-conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="iv.-conclusion">iv. Conclusion</h2>
+<p>It seems that a significantly accurate model to predict if a cancerous cell could be malignant using the measurements recorded in this dataset. To test this, we created multiple regression models, a random forest model, and a PCA analysis to understand the variables more thoroughly. &nbsp;</p>
+<p>In the PCA test we determined that the dataset's variance could be explained by simplifying and using only 2 of 9 predictor variables. We then created multiple logistic regression models and compared them to each other to choose the best one. After variable transformation and selection, we determined the best model would be to use all the variables. The percent chance the model falsely predicted cancer when not was 10/444 (2.2%) and the chance the model falsely predicted not having cancer when there was 11/239 (4.6%). We then decided to try and create an optimal best random forest model, starting with a best fit decision tree model. The created model resulted in an overall accuracy rate of almost 98% with the percent chance the model falsely predicted cancer when not was 6/444 (1.4%) and the chance the model falsely predicted not having cancer when there was 9/239 (3.7%). Based on the two models we created, the best model to use would be the random forest model because of its high accuracy and predictability.&nbsp;</p>
+</section>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References</h2>
+<p>[1] Wolberg,WIlliam. (1992). Breast Cancer Wisconsin (Original). UCI Machine Learning Repository. https://doi.org/10.24432/C5HP4Z.&nbsp;</p>
 </section>
 
 </main>

@@ -53,7 +53,7 @@ The dataset we choose to perform this research is from Dr. William Wolberg and h
 
 -   **barenuclei**: (1-10). This term is used for nuclei not surrounded by cytoplasm (the rest of the cell). Those are typically seen in benign tumors. 
 
--   **blandchromatin**: (1-10). Describes a uniform \"texture\" of the nucleus seen in benign cells. In cancer cells, the chromatin tends to be more coarse and to form clumps. 
+-   **blandchromatin**: (1-10). Describes a uniform "texture" of the nucleus seen in benign cells. In cancer cells, the chromatin tends to be more coarse and to form clumps. 
 
 -   **normalnucleoli**: (1-10). Nucleoli are small structures seen in the nucleus. In normal cells, the nucleolus is usually very small, if visible. The nucleoli become more prominent in cancer cells, and sometimes there are multiple. 
 
@@ -97,6 +97,8 @@ pairs.panels(df_clean)
 
 Some of the variables showed correlations to each other, but none were deemed significant by the corr.test() function. But one thing we did notice was that many of the variables exhibited a right skew with their means larger than their medians. We could potentially log() the variables to make them more uniform.
 
+## ii. Materials and Methods
+
 ### Logistic Regression Model
 
 We decided to develop a Logisitic regression model to see if we could develop a model that could be used to predict if a cell was cancerous or not. Because our outcome can only be one of two things (cell is malignant or benign) we should be using a classification model and logistic regression is a simple model which is much easier to set up and train initially than other machine learning models.
@@ -135,7 +137,7 @@ anova(model_1, model_3, test = "Chisq")
 
 As should be expected, creating a model using only the significant variables was worse at explaining the dataset. Using the Chisq test, we can also conclude that the more complex model is significantly better than the simpler model.
 
-Using model_1 as the final model, lets see how accurcate it is for prediction.
+Using model_1 as the final model, lets see how accurate it is for prediction.
 
 ```{r}
 glm.probs=predict(model_1,type="response")
@@ -158,17 +160,20 @@ Another modeling type we used for trying to predict whether a cell was cancerous
 First, we looked at a decision tree model to determine the best spilt for node splitting. We did this by splitting the data into two sets, training and testing to train the model and then test its accuracy.
 
 ```{r}
-set.seed(1) 
+df_clean$benormal=as.integer(df_clean$benormal)
+set.seed(2) 
 train = sample(1:nrow(df_clean), nrow(df_clean)/2) 
 tree.df_clean=tree(benormal~.,df_clean,subset=train) 
 cv.df_clean=cv.tree(tree.df_clean) 
 plot(cv.df_clean$size,cv.df_clean$dev,type='b')
 ```
 
-Based on these results, it is best to include 3 variables in each split. Knowing this, we created a random forest model at the desired variable spilt.
+Based on these results, it is best to include 6 variables in each split. Knowing this, we created a random forest model at the desired variable split.
 
 ```{r}
-cancer_rf=randomForest(benormal~.,data=df_clean,subset=train,mtry=3,importance=TRUE) 
+df_clean <- na.omit(df) 
+df_clean$benormal <- ifelse(df_clean$benormal == 4, 1, ifelse(df_clean$benormal == 2, 0, df_clean$benormal))
+cancer_rf=randomForest(benormal~.,data=df_clean,subset=train,mtry=6,importance=TRUE) 
 yhat.rf = predict(cancer_rf,newdata=df_clean[-train,]) 
 df_clean.test=df_clean[-train,"benormal"] 
 mean((yhat.rf-df_clean.test)^2) #test set MSE 
@@ -177,10 +182,10 @@ plot(cancer_rf)
 varImpPlot(cancer_rf) 
 ```
 
-The variable that is most important to reduce the mean standard error (MSE) is barenuceli and the variables that were deemed the most important to include in the node splitting were uniformcellsize and uniformcellshape. Overall, the model is very good with 88.7% of the variables explained.
+The variable that is most important to reduce the mean standard error (MSE) is barenuceli and the variables that were deemed the most important to include in the node splitting were uniformcellsize and uniformcellshape. Overall, the model is very good with 88.7% of the variables explained. Looking at the confusion matrix:
 
 ```{r}
-glm.probs=predict(cancer_rf,type="response")
+glm.probs=predict(cancer_rf,df_clean,type="response")
 glm.probs[1:10]
 
 glm.pred=rep(0,nrow(df_clean))
@@ -191,7 +196,7 @@ df_clean$benormal=as.factor(df_clean$benormal)
 confusionMatrix(glm.pred,df_clean$benormal)
 ```
 
-However, when looking at the confusion matrix we see a different story. The % chance the model falsely predicted cancer when not was 167/444 (37.6%) and the chance the model falsely predicted not having cancer when there was 136/239 (56.9%).
+The percent chance the model falsely predicted cancer when not was 6/444 (1.4%) and the chance the model falsely predicted not having cancer when there was 9/239 (3.7%).
 
 ### Principal Component Analysis
 
@@ -230,4 +235,20 @@ plot(cumsum(pve), xlab="Principal Component",
 
 The eigenvalues taper off after the first few components, with the first two capturing the majority of the variance.
 
-In the second plot we can see that the first 6 components explain over 80% of the variance in the data and the remaining components add little additional information.
+In the plot on the right we can see that the first 6 components explain over 90% of the variance in the data and the remaining components add little additional information.
+
+## iii. Limitations
+
+There were no major limitations for this analysis but there were a few of things that needed to be done to the dataset in order to clean and make the dataset usable for analysis. First, we had to identify and remove all missing rows from the dataset. Second, we had to transform the response variable to be \"0\" and \"1\". Finally, many of the variables seemed to show a left skew making us question if the variables should be transformed or not. 
+
+There were only 699 samples for the dataset and although a solid number of samples, more samples would lead to a more predictable conclusion. 
+
+## iv. Conclusion
+
+It seems that a significantly accurate model to predict if a cancerous cell could be malignant using the measurements recorded in this dataset. To test this, we created multiple regression models, a random forest model, and a PCA analysis to understand the variables more thoroughly.  
+
+In the PCA test we determined that the dataset\'s variance could be explained by simplifying and using only 2 of 9 predictor variables. We then created multiple logistic regression models and compared them to each other to choose the best one. After variable transformation and selection, we determined the best model would be to use all the variables. The percent chance the model falsely predicted cancer when not was 10/444 (2.2%) and the chance the model falsely predicted not having cancer when there was 11/239 (4.6%). We then decided to try and create an optimal best random forest model, starting with a best fit decision tree model. The created model resulted in an overall accuracy rate of almost 98% with the percent chance the model falsely predicted cancer when not was 6/444 (1.4%) and the chance the model falsely predicted not having cancer when there was 9/239 (3.7%). Based on the two models we created, the best model to use would be the random forest model because of its high accuracy and predictability. 
+
+## References
+
+\[1\] Wolberg,WIlliam. (1992). Breast Cancer Wisconsin (Original). UCI Machine Learning Repository. https://doi.org/10.24432/C5HP4Z. 

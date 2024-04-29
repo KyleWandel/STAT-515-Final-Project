@@ -117,6 +117,7 @@ cv.df_clean=cv.tree(tree.df_clean)
 plot(cv.df_clean$size,cv.df_clean$dev,type='b')
 # Tree is maxed at 4, 3 is very close to 4 
 prune.df_clean=prune.tree(tree.df_clean,best=3)
+summary(prune.df_clean)
 plot(prune.df_clean)
 text(prune.df_clean,pretty=0)
 # Testing models
@@ -126,19 +127,26 @@ df_clean.test=df_clean[-train,"benormal"]#testing y values
 mean((yhat-df_clean.test)^2) #MSE testing
 
 # Creating a random forest model
-set.seed(1)
-train = sample(1:nrow(df_clean), nrow(df_clean)/2)
 cancer_rf=randomForest(benormal~.,data=df_clean,subset=train,mtry=3,importance=TRUE)
 yhat.rf = predict(cancer_rf,newdata=df_clean[-train,])
-df_clean.test=df_clean[-train,"benormal"]
 mean((yhat.rf-df_clean.test)^2) #test set MSE
 # plotting the forest
 plot(cancer_rf)
 # What are the most important factors?
 varImpPlot(cancer_rf)
-cancer_rf
 
 
+glm.probs=predict(cancer_rf,type="response")
+glm.probs[1:10]
+
+glm.pred=rep(0,nrow(df_clean))
+glm.pred[glm.probs>.5]=1
+
+glm.pred=as.factor(glm.pred)
+df_clean$benormal=as.factor(df_clean$benormal)
+confusionMatrix(glm.pred,df_clean$benormal)
+
+library(caret)
 # Do a PCA on the models reduced dataset for question 3
 df_clean$benormal <- as.integer(df_clean$benormal)
 states=row.names(df_clean)
